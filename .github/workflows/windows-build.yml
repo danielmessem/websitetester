@@ -23,6 +23,8 @@ jobs:
         run: npm install
       - name: Install Chromium
         run: npx playwright install chromium
+      - name: Smoke test homepage engine
+        run: npm test
       - name: Build installer
         run: npm run build
       - name: Upload installer
