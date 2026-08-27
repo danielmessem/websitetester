@@ -1,8 +1,8 @@
 {
-  "name": "website-tester-windows",
-  "version": "0.2.1",
+  "name": "website-check-windows",
+  "version": "0.3.0",
   "private": true,
-  "description": "Simple Windows website QA runner",
+  "description": "Self-contained Windows homepage testing app",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -17,10 +17,33 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.websitetester.app",
-    "productName": "Website Tester",
-    "files": ["main.js", "test-engine.js", "preload.js", "renderer/**/*", "package.json"],
-    "win": { "target": "nsis" },
-    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true }
+    "appId": "com.websitecheck.app",
+    "productName": "Website Check",
+    "files": [
+      "main.js",
+      "test-engine.js",
+      "preload.js",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "browsers",
+        "to": "browsers",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "include": "build/installer.nsh",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Website Check"
+    }
   }
 }
