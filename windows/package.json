@@ -1,0 +1,25 @@
+{
+  "name": "website-tester-windows",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simple Windows website QA runner",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "playwright": "1.62.1"
+  },
+  "devDependencies": {
+    "electron": "^38.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.websitetester.app",
+    "productName": "Website Tester",
+    "files": ["main.js", "preload.js", "renderer/**/*", "package.json"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true }
+  }
+}
