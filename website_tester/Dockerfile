@@ -1,7 +1,13 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
-FROM ${BUILD_FROM}
+FROM ghcr.io/home-assistant/base:latest
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ARG BUILD_VERSION
+ARG BUILD_ARCH
+
+LABEL \
+  io.hass.type="app" \
+  io.hass.name="Website Tester" \
+  io.hass.version="${BUILD_VERSION}" \
+  io.hass.arch="amd64|aarch64"
 
 RUN apk add --no-cache \
     nodejs \
@@ -17,14 +23,12 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY website_tester/package.json ./package.json
 RUN npm install --omit=dev
 
-COPY runner.js ./
+COPY website_tester/runner.js ./runner.js
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin
 ENV CHROME_BIN=/usr/bin/chromium-browser
-
-RUN npm install playwright@1.62.1
 
 CMD ["node", "/app/runner.js"]
