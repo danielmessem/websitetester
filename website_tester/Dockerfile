@@ -23,12 +23,11 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY website_tester/package.json ./package.json
+COPY package.json ./package.json
 RUN npm install --omit=dev
 
-COPY website_tester/runner.js ./runner.js
+COPY runner.js ./runner.js
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin
 ENV CHROME_BIN=/usr/bin/chromium-browser
 
 CMD ["node", "/app/runner.js"]
