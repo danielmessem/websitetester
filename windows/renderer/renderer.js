@@ -1,13 +1,13 @@
 const $ = id => document.getElementById(id);
 const status = $('status');
 const progress = $('progress');
+let latestResult = null;
 
 window.tester.onProgress(message => { progress.textContent = message; });
 
 (async () => {
   const s = await window.tester.getSettings();
   $('url').value = s.url || '';
-  $('schedule').value = s.schedule || '06:00';
   $('cookieName').value = s.cookieName || '';
   $('cookieValue').value = s.cookieValue || '';
   const r = await window.tester.latest();
@@ -15,22 +15,28 @@ window.tester.onProgress(message => { progress.textContent = message; });
 })();
 
 $('save').onclick = async () => {
-  if (!$('url').value.trim()) return status.textContent = 'Enter a homepage URL.';
+  if (!$('url').value.trim()) {
+    status.className = 'fail';
+    status.textContent = 'Enter a homepage URL.';
+    return false;
+  }
   await window.tester.saveSettings({
     url: $('url').value.trim(),
-    schedule: $('schedule').value,
     cookieName: $('cookieName').value.trim(),
     cookieValue: $('cookieValue').value,
   });
   progress.textContent = 'Settings saved.';
+  return true;
 };
 
 $('run').onclick = async () => {
   status.textContent = '';
-  progress.textContent = 'Starting tests...';
+  progress.textContent = 'Starting visible homepage test...';
   $('run').disabled = true;
+  $('openFolder').disabled = true;
   try {
-    await $('save').onclick();
+    const saved = await $('save').onclick();
+    if (!saved) return;
     show(await window.tester.runTest());
   } catch (e) {
     status.className = 'fail';
@@ -40,7 +46,14 @@ $('run').onclick = async () => {
   }
 };
 
+$('openFolder').onclick = async () => {
+  if (latestResult?.resultsFolder) await window.tester.openFolder(latestResult.resultsFolder);
+};
+
 function show(r) {
+  latestResult = r;
+  $('openFolder').disabled = !r.resultsFolder;
   status.className = r.status === 'PASS' ? 'pass' : 'fail';
-  status.textContent = `${r.status}\n${r.url}\n\nLinks checked: ${r.checked.length}\nFailures: ${r.failures.length}\n\n${r.failures.slice(0, 20).join('\n') || 'No issues found.'}`;
+  const shots = (r.screenshots || []).map(s => `• ${s.device}: ${s.viewport.width}×${s.viewport.height}`).join('\n');
+  status.textContent = `${r.status}\n${r.url}\nHTTP: ${r.httpStatus ?? 'n/a'}\nTitle: ${r.title || '(empty)'}\n\nScreenshots saved:\n${shots || 'None'}\n\n${r.failures?.length ? r.failures.join('\n') : 'Homepage loaded successfully on all device sizes.'}`;
 }
