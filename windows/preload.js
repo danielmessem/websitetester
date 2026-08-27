@@ -4,6 +4,6 @@ contextBridge.exposeInMainWorld('tester', {
   saveSettings: s => ipcRenderer.invoke('settings:save', s),
   runTest: () => ipcRenderer.invoke('test:run'),
   latest: () => ipcRenderer.invoke('results:latest'),
-  open: file => ipcRenderer.invoke('results:open', file),
+  openFolder: folder => ipcRenderer.invoke('results:open-folder', folder),
   onProgress: callback => ipcRenderer.on('test:progress', (_, message) => callback(message)),
 });
