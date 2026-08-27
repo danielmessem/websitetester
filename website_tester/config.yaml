@@ -1,7 +1,7 @@
 name: Website Tester
 description: >-
   Runs configurable Playwright website monitoring tests from Home Assistant.
-version: 0.1.0
+version: 0.1.1
 slug: website_tester
 url: https://github.com/danielmessem/websitetester
 startup: application
@@ -27,7 +27,6 @@ schema:
   timezone: str
   screenshot_mode: str
   timeout_minutes: int
-image: ghcr.io/danielmessem/websitetester
 panel_icon: mdi:web-check
 panel_title: Website Tester
 backup: hot
