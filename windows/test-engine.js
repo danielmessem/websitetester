@@ -10,25 +10,54 @@ const DEVICES = [
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function launchBrowser({ headless = false, progress = () => {} } = {}) {
-  if (headless) return chromium.launch({ headless: true });
-  try { return await chromium.launch({ headless: false, channel: 'msedge', slowMo: 150 }); }
-  catch (edgeError) {
-    progress('Microsoft Edge unavailable, trying Google Chrome.');
-    try { return await chromium.launch({ headless: false, channel: 'chrome', slowMo: 150 }); }
-    catch { throw new Error(`Could not start Microsoft Edge or Google Chrome. ${edgeError.message}`); }
+function findExecutable(root) {
+  if (!root || !fs.existsSync(root)) return null;
+  const stack = [root];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) stack.push(full);
+      else if (entry.name.toLowerCase() === 'chrome.exe') return full;
+    }
   }
+  return null;
 }
 
-async function runHomepageTest({ settings, resultsDir, progress = () => {}, headless = false, pauseMs = 900 }) {
+function bundledBrowserPath() {
+  const roots = [
+    process.env.WEBSITE_TESTER_BROWSER_DIR,
+    process.resourcesPath ? path.join(process.resourcesPath, 'browsers') : null,
+    path.join(__dirname, 'browsers'),
+  ].filter(Boolean);
+  for (const root of roots) {
+    const found = findExecutable(root);
+    if (found) return found;
+  }
+  throw new Error('Bundled Chromium was not found. Reinstall Website Check.');
+}
+
+async function launchBrowser({ headless = false, progress = () => {} } = {}) {
+  const executablePath = bundledBrowserPath();
+  progress(`Using bundled Chromium: ${executablePath}`);
+  return chromium.launch({ headless, executablePath, slowMo: headless ? 0 : 150 });
+}
+
+async function runHomepageTest({ settings, resultsDir, screenshotsDir = resultsDir, progress = () => {}, headless = false, pauseMs = 900 }) {
   if (!settings?.url) throw new Error('Set the homepage URL first.');
   let homepage;
   try { homepage = new URL(settings.url); }
   catch { throw new Error('Homepage URL is not valid. Include https://'); }
 
   const start = new Date();
-  const dir = path.join(resultsDir, start.toISOString().replace(/[:.]/g, '-'));
-  fs.mkdirSync(dir, { recursive: true });
+  const stamp = start.toISOString().replace(/[:.]/g, '-');
+  const resultDir = path.join(resultsDir, stamp);
+  const screenshotRunDir = path.join(screenshotsDir, stamp);
+  fs.mkdirSync(resultDir, { recursive: true });
+  fs.mkdirSync(screenshotRunDir, { recursive: true });
+
   const screenshots = [];
   const failures = [];
   let httpStatus = null;
@@ -65,7 +94,7 @@ async function runHomepageTest({ settings, resultsDir, progress = () => {}, head
       if (!response || httpStatus >= 400) failures.push(`${device.name}: homepage returned HTTP ${httpStatus ?? 'no response'}`);
       if (!title) failures.push(`${device.name}: page title is empty`);
 
-      const screenshotPath = path.join(dir, device.file);
+      const screenshotPath = path.join(screenshotRunDir, device.file);
       await page.screenshot({ path: screenshotPath, fullPage: true });
       screenshots.push({ device: device.name, viewport: device.viewport, path: screenshotPath });
       progress(`${device.name}: screenshot saved.`);
@@ -87,12 +116,13 @@ async function runHomepageTest({ settings, resultsDir, progress = () => {}, head
     cookieName: settings.cookieName || '',
     screenshots,
     failures,
-    resultsFolder: dir,
+    resultsFolder: resultDir,
+    screenshotsFolder: screenshotRunDir,
   };
-  fs.writeFileSync(path.join(dir, 'result.json'), JSON.stringify(result, null, 2));
+  fs.writeFileSync(path.join(resultDir, 'result.json'), JSON.stringify(result, null, 2));
   fs.writeFileSync(path.join(resultsDir, 'latest.json'), JSON.stringify(result, null, 2));
   progress(`${result.status}: homepage loaded on ${DEVICES.length} device sizes.`);
   return result;
 }
 
-module.exports = { DEVICES, runHomepageTest };
+module.exports = { DEVICES, runHomepageTest, bundledBrowserPath };
