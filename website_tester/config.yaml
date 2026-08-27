@@ -1,0 +1,34 @@
+name: Website Tester
+description: >-
+  Runs configurable Playwright website monitoring tests from Home Assistant.
+version: 0.1.0
+slug: website_tester
+url: https://github.com/danielmessem/websitetester
+startup: application
+init: false
+arch:
+  - amd64
+  - aarch64
+stdin: true
+timeout: 30
+tmpfs: true
+map:
+  - type: addon_config
+    read_only: false
+options:
+  website_url: "https://example.com"
+  schedule: "06:00"
+  timezone: "Africa/Johannesburg"
+  screenshot_mode: failures
+  timeout_minutes: 30
+schema:
+  website_url: url
+  schedule: str
+  timezone: str
+  screenshot_mode: str
+  timeout_minutes: int
+image: ghcr.io/danielmessem/websitetester
+panel_icon: mdi:web-check
+panel_title: Website Tester
+backup: hot
+stage: experimental
