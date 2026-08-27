@@ -14,6 +14,9 @@ jobs:
     defaults:
       run:
         working-directory: windows
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}\windows\browsers
+      WEBSITE_TESTER_BROWSER_DIR: ${{ github.workspace }}\windows\browsers
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -21,15 +24,15 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Install Chromium
+      - name: Install bundled Chromium
         run: npx playwright install chromium
       - name: Smoke test homepage engine
         run: npm test
-      - name: Build installer
+      - name: Build self-contained installer
         run: npm run build
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Website-Tester-Windows-Installer
+          name: Website-Check-Windows-Installer
           path: windows/dist/*.exe
           if-no-files-found: error
