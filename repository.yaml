@@ -1,0 +1,4 @@
+name: Website Tester
+description: Generic Home Assistant app for scheduled website monitoring with Playwright.
+url: https://github.com/danielmessem/websitetester
+maintainer: danielmessem
