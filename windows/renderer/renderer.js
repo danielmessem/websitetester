@@ -1,0 +1,5 @@
+const $ = id => document.getElementById(id); const status = $('status');
+(async () => { const s = await window.tester.getSettings(); $('url').value = s.url || ''; $('schedule').value = s.schedule || '06:00'; const r = await window.tester.latest(); if (r) show(r); })();
+$('save').onclick = async () => { if (!$('url').value.trim()) return status.textContent = 'Enter a homepage URL.'; await window.tester.saveSettings({ url: $('url').value.trim(), schedule: $('schedule').value }); status.textContent = 'Settings saved.'; };
+$('run').onclick = async () => { status.textContent = 'Running tests...'; $('run').disabled = true; try { show(await window.tester.runTest()); } catch(e) { status.textContent = `Error: ${e.message}`; } finally { $('run').disabled = false; } };
+function show(r) { status.className = r.status === 'PASS' ? 'pass' : 'fail'; status.textContent = `${r.status}\n${r.url}\n\nLinks checked: ${r.checked.length}\nFailures: ${r.failures.length}\n\n${r.failures.slice(0,20).join('\n') || 'No issues found.'}`; }
