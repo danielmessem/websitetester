@@ -1,0 +1,22 @@
+name: Windows Build
+on:
+  push:
+    branches: [main]
+    paths: ['windows/**']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: windows/package-lock.json
+      - run: npm install
+      - run: npx playwright install chromium
+      - run: npm run build
